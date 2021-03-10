@@ -8,7 +8,11 @@
 import SwiftUI
 
 struct ContentView: View {
+//    @State private var usedWords = [String]()
     @State private var usedWords = [String]()
+    @State private var usedWords2 = [String](repeating: "test", count: 40)
+    let colors: [Color] = [.red, .green, .blue, .orange, .pink, .purple, .yellow]
+    
     @State private var rootWord = ""
     @State private var newWord = ""
 
@@ -109,9 +113,19 @@ struct ContentView: View {
                     .autocapitalization(.none)
                     .padding()
 
-                List(usedWords, id: \.self) {
-                    Image(systemName: "\($0.count).circle")
-                    Text($0)
+                //Project 18 - Challenge 2
+                GeometryReader { mainView in
+                    List(usedWords2, id: \.self) { word in
+                        GeometryReader { innerView in
+                            HStack {
+                                Image(systemName: "\(word.count).circle")
+                                    .foregroundColor(self.getColor(mainProxy: mainView, innerProxy: innerView))
+                                Text(word)
+                            }
+                            .frame(width: innerView.size.width, alignment: .leading)
+                            .offset(x: self.getOffset(mainProxy: mainView, innerProxy: innerView), y: 0)
+                        }
+                    }
                 }
             }
             .navigationBarTitle(rootWord)
@@ -127,6 +141,34 @@ struct ContentView: View {
                 Alert(title: Text(errorTitle), message: Text(errorMessage), dismissButton: .default(Text("OK")))
             }
         }
+    }
+    
+    func getColor(mainProxy: GeometryProxy,innerProxy: GeometryProxy) -> Color{
+        let listHeight = mainProxy.size.height
+        let listStart = mainProxy.frame(in: .global).minY
+        let itemStart = innerProxy.frame(in: .global).minY
+        
+        let itemPercent =  (itemStart - listStart) / listHeight * 100
+        let colorValue = Double(itemPercent / 100)
+        
+        return Color(red: 2 * (1 - colorValue), green: 0, blue: 2 * colorValue, opacity: 1)
+    }
+    
+    func getOffset(mainProxy: GeometryProxy,innerProxy: GeometryProxy) -> CGFloat{
+        let listHeight = mainProxy.size.height
+        let listStart = mainProxy.frame(in: .global).minY
+        let itemStart = innerProxy.frame(in: .global).minY
+        
+        let itemPercent =  (itemStart - listStart) / listHeight * 100
+
+        let thresholdPercent: CGFloat = 60
+        let indent: CGFloat = 5
+
+        if itemPercent > thresholdPercent {
+            return (itemPercent - (thresholdPercent - 1)) * indent
+        }
+
+        return 0
     }
 }
 
